@@ -98,7 +98,7 @@
     <!-- Commissioned Designs Section -->
     <div class="container mt-5">
         <div class="commissioned-hero">
-            <h1>COMMISSIONED DESIGNS</h1>
+            <h1>DESIGNS</h1>
             <p>"Looking for something unique? Get a custom design made just for you!"</p>
         </div>
 
