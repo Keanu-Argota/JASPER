@@ -52,10 +52,23 @@
             margin-left: 15px;
         }
 
-        .search-icon {
+        .nav-icons {
+            display: flex;
+            align-items: center;
             color: white;
+        }
+
+        .nav-icons i {
             cursor: pointer;
-            margin-left: 10px;
+            margin-left: 15px;
+        }
+
+        .search-icon, .cart-icon {
+            transition: color 0.3s ease;
+        }
+
+        .search-icon:hover, .cart-icon:hover {
+            color: #aaa;
         }
 
         .search-popup {
@@ -207,10 +220,13 @@
                     <li class="nav-item">
                         <a class="nav-link" href="Login.php">LOGIN</a>
                     </li>
-                    <li class="nav-item search-container">
-                        <i class="bi bi-search search-icon" id="searchToggle"></i>
-                        <div class="search-popup" id="searchPopup">
-                            <input type="text" placeholder="Search designs..." id="searchInput">
+                    <li class="nav-item nav-icons">
+                        <i class="bi bi-cart cart-icon" id="cartIcon"></i>
+                        <div class="search-container">
+                            <i class="bi bi-search search-icon" id="searchToggle"></i>
+                            <div class="search-popup" id="searchPopup">
+                                <input type="text" placeholder="Search designs..." id="searchInput">
+                            </div>
                         </div>
                     </li>
                 </ul>
@@ -290,6 +306,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Search popup functionality
             const searchToggle = document.getElementById('searchToggle');
             const searchPopup = document.getElementById('searchPopup');
             const searchInput = document.getElementById('searchInput');
@@ -311,6 +328,13 @@
             // Prevent search popup from closing when clicking inside
             searchPopup.addEventListener('click', function(e) {
                 e.stopPropagation();
+            });
+
+            // Cart icon navigation
+            const cartIcon = document.getElementById('cartIcon');
+            cartIcon.addEventListener('click', function() {
+                // Navigate to Cart.php when cart icon is clicked
+                window.location.href = 'Cart.php';
             });
         });
     </script>
