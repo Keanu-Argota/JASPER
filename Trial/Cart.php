@@ -14,7 +14,7 @@
         }
 
         .navbar {
-            background-color: #1E1E1E;
+            background-color: #1E1E1E
             padding: 10px 0;
         }
 
