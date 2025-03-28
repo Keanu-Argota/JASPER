@@ -12,6 +12,11 @@
     ?>
 
 <?php
+<?php
+session_start();
+
+// Include database connection
+require_once 'db_connection.php';
 
 // Function to sanitize and validate input
 function validateInput($data) {
@@ -64,59 +69,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Check if username or email already exists
     if (empty($errors)) {
-        try {
-            // Check for existing username
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
-            $stmt->execute([$username]);
-            if ($stmt->fetchColumn() > 0) {
-                $errors[] = "Username is already taken.";
-            }
-
-            // Check for existing email
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            if ($stmt->fetchColumn() > 0) {
-                $errors[] = "Email is already registered.";
-            }
-        } catch(PDOException $e) {
-            $errors[] = "Database error: " . $e->getMessage();
+        // Check for existing username
+        $stmt = $conn->prepare("SELECT COUNT(*) AS count FROM users WHERE username = ?");
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        if ($row['count'] > 0) {
+            $errors[] = "Username is already taken.";
         }
+        $stmt->close();
+
+        // Check for existing email
+        $stmt = $conn->prepare("SELECT COUNT(*) AS count FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        if ($row['count'] > 0) {
+            $errors[] = "Email is already registered.";
+        }
+        $stmt->close();
     }
 
     // If no errors, proceed with registration
     if (empty($errors)) {
-        try {
-            // Hash the password
-            $hashed_password = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+        // Hash the password
+        $hashed_password = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
 
-            // Prepare SQL to insert new user
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+        // Prepare SQL to insert new user
+        $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $username, $email, $hashed_password);
+        
+        // Execute the statement
+        if ($stmt->execute()) {
+            // Registration successful
+            $_SESSION['registration_success'] = "Registration successful! Please log in.";
             
-            // Execute the statement
-            $result = $stmt->execute([$username, $email, $hashed_password]);
+            // Optional: Send welcome email
+            $to = $email;
+            $subject = "Welcome to Metro District Designs";
+            $message = "Hello $username,\n\nThank you for registering with Metro District Designs!\n\nBest regards,\nMetro District Designs Team";
+            $headers = "From: noreply@metrodistrict.com";
+            
+            // Uncomment the line below if you want to send an email (requires proper email configuration)
+            // mail($to, $subject, $message, $headers);
 
-            if ($result) {
-                // Registration successful
-                $_SESSION['registration_success'] = "Registration successful! Please log in.";
-                
-                // Optional: Send welcome email
-                $to = $email;
-                $subject = "Welcome to Metro District Designs";
-                $message = "Hello $username,\n\nThank you for registering with Metro District Designs!\n\nBest regards,\nMetro District Designs Team";
-                $headers = "From: noreply@metrodistrict.com";
-                
-                // Uncomment the line below if you want to send an email (requires proper email configuration)
-                // mail($to, $subject, $message, $headers);
-
-                // Redirect to login page
-                header("Location: Login.php");
-                exit();
-            } else {
-                $errors[] = "Registration failed. Please try again.";
-            }
-        } catch(PDOException $e) {
-            $errors[] = "Registration error: " . $e->getMessage();
+            // Redirect to login page
+            header("Location: Login.php");
+            exit();
+        } else {
+            $errors[] = "Registration failed. Please try again.";
         }
+        $stmt->close();
     }
 
     // If there are errors, store them in session and redirect back to signup
