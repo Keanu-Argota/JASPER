@@ -24,7 +24,7 @@ if ($conn->connect_error){
         body {
             background-color: #E5E4E2;
             font-family: Arial, sans-serif;
-        }
+        }   
 
         .navbar {
             background-color: #1E1E1E;
