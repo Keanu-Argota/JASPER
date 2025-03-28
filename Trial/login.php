@@ -5,7 +5,7 @@ session_start();
 $host = "localhost";
 $username = "root";
 $password = "";
-$database = "login";
+$database = "metrodistrictdesigns";
 
 $conn = new mysqli($host, $username, $password, $database);
 
