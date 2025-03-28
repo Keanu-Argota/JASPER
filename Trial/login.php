@@ -11,41 +11,31 @@ if ($conn->connect_error){
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Handle login submission
-$login_error = "";
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $conn->real_escape_string($_POST['email']);
-    $password = $_POST['password'];
-
-    // Prepare SQL to prevent SQL injection
-    $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows === 1) {
-        $user = $result->fetch_assoc();
-        
-        // Verify password
-        if (password_verify($password, $user['password'])) {
-            // Login successful
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            
-            // Redirect to dashboard or homepage
-            header("Location: Homepage.php");
-            exit();
-        } else {
-            // Invalid password
-            $login_error = "Invalid email or password";
-        }
-    } else {
-        // User not found
-        $login_error = "Invalid email or password";
-    }
-
-    $stmt->close();
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    // If not logged in, redirect to login page
+    header("Location: login.php");
+    exit();
 }
+
+// Fetch user details
+$user_id = $_SESSION['user_id'];
+$stmt = $conn->prepare("SELECT username, email FROM users WHERE id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+// Check if user exists
+if ($result->num_rows === 0) {
+    // User not found, destroy session and redirect
+    session_unset();
+    session_destroy();
+    header("Location: login.php");
+    exit();
+}
+
+$user = $result->fetch_assoc();
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -53,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metro District Designs - Login</title>
+    <title>Metro District Designs - Login Confirmation</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -91,35 +81,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin: 0 10px;
         }
 
-        .login-container {
+        .login-confirm-container {
             background-color: #9b9b9b;
             width: 800px;
             padding: 80px;
             text-align: center;
             margin: 80px auto;
+            border-radius: 10px;
         }
-        .login-container h2 {
-            color: black;
+
+        .user-info {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
             margin-bottom: 20px;
         }
-        .login-form input {
-            width: 100%;
-            margin-bottom: 25px;
-            padding: 8px;
-            border: none;
-            box-sizing: border-box;
-        }
-        .login-form button {
+
+        .logout-btn {
             width: 100%;
             padding: 10px;
-            background-color: white;
+            background-color: #1E1E1E;
+            color: white;
             border: none;
             cursor: pointer;
-            margin-top: 15px;
-        }
-        .error-message {
-            color: red;
-            margin-bottom: 15px;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -141,35 +126,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <li class="nav-item"><a class="nav-link" href="Commissioned.php">COMMISSIONED DESIGNS</a></li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="Signup.php">SIGNUP</a></li>
+                    <li class="nav-item">
+                        <form action="logout.php" method="post" class="nav-link">
+                            <button type="submit" class="btn btn-link text-white p-0">LOGOUT</button>
+                        </form>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="login-container">
-        <h2>LOGIN</h2>
+    <div class="login-confirm-container">
+        <div class="user-info">
+            <h2>Login Confirmation</h2>
+            <p>Welcome, <strong><?php echo htmlspecialchars($user['username']); ?>!</strong></p>
+            <p>Email: <?php echo htmlspecialchars($user['email']); ?></p>
+        </div>
         
-        <?php
-        // Display login errors
-        if (!empty($login_error)) {
-            echo '<div class="error-message">' . htmlspecialchars($login_error) . '</div>';
-        }
-
-        // Display any registration success message
-        if (isset($_SESSION['registration_success'])) {
-            echo '<div class="alert alert-success">' . htmlspecialchars($_SESSION['registration_success']) . '</div>';
-            unset($_SESSION['registration_success']);
-        }
-        ?>
-
-        <form class="login-form" action="Login.php" method="POST">
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <div class="login-link">
-                Don't have an account? <a href="Signup.php">Sign Up</a>
-            </div>
-            <button type="submit">Login</button>
+        <form action="logout.php" method="post">
+            <button type="submit" class="logout-btn">Logout</button>
         </form>
     </div>
 
