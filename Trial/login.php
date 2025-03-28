@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -13,21 +14,42 @@ if ($conn->connect_error){
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    // If not logged in, redirect to login page
-    header("Location: login.php");
-    exit();
-}
+$login_error = "";
 
-// Fetch user details
-$user_id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT name, email FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
-$stmt->close();
+// Handle login form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = $conn->real_escape_string($_POST['email']);
+    $password = $_POST['password'];
+
+    // Prepare SQL to prevent SQL injection
+    $stmt = $conn->prepare("SELECT id, name, password FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
+        
+        // Verify password (assuming passwords are hashed)
+        if (password_verify($password, $user['password'])) {
+            // Login successful
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['name'];
+            
+            // Redirect to login confirmation page
+            header("Location: login.php");
+            exit();
+        } else {
+            // Invalid password
+            $login_error = "Invalid email or password";
+        }
+    } else {
+        // User not found
+        $login_error = "Invalid email or password";
+    }
+
+    $stmt->close();
+}
 ?>
 
 <!DOCTYPE html>
@@ -35,7 +57,7 @@ $stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Confirmation - Metro District Designs</title>
+    <title>Login - Metro District Designs</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -44,86 +66,46 @@ $stmt->close();
             font-family: Arial, sans-serif;
         }
 
-        .navbar {
-            background-color: #1E1E1E;
-            padding: 10px 0;
-        }
-
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            color: white !important;
-            font-weight: bold;
-        }
-
-        .navbar-brand img {
-            height: 30px;
-            margin-right: 10px;
-        }
-
-        .navbar-nav .nav-link {
-            color: white !important;
-            text-transform: uppercase;
-            font-weight: bold;
-            margin: 0 10px;
-        }
-
-        .confirmation-container {
+        .login-container {
             background-color: #9b9b9b;
-            max-width: 600px;
+            max-width: 400px;
+            margin: 100px auto;
             padding: 40px;
-            margin: 80px auto;
-            text-align: center;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        .user-info {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .login-form input {
+            margin-bottom: 15px;
         }
 
-        .logout-btn {
-            background-color: #1E1E1E;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background-color: #333;
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="Homepage.php">
-                <img src="/api/placeholder/40/40" class="rounded-circle">
-                Metro District Designs
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="logout.php">LOGOUT</a>
-            </div>
+    <div class="container">
+        <div class="login-container">
+            <h2 class="text-center mb-4">Login</h2>
+            
+            <?php
+            if (!empty($login_error)) {
+                echo "<div class='error-message text-center'>$login_error</div>";
+            }
+            ?>
+            
+            <form class="login-form" method="POST" action="">
+                <input type="email" name="email" class="form-control" placeholder="Email" required>
+                <input type="password" name="password" class="form-control" placeholder="Password" required>
+                <button type="submit" class="btn btn-dark w-100">Login</button>
+                
+                <div class="text-center mt-3">
+                    Don't have an account? <a href="signup.php">Sign up</a>
+                </div>
+            </form>
         </div>
-    </nav>
-
-    <div class="confirmation-container">
-        <div class="user-info">
-            <h2>Login Confirmation</h2>
-            <p>Welcome, <strong><?php echo htmlspecialchars($user['name']); ?>!</strong></p>
-            <p>Email: <?php echo htmlspecialchars($user['email']); ?></p>
-        </div>
-        
-        <form action="logout.php" method="post">
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
