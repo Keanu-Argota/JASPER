@@ -1,8 +1,5 @@
-
 <?php
 session_start();
-
-// Database connection
 $host = "localhost";
 $username = "root";
 $password = "";
@@ -14,15 +11,14 @@ if ($conn->connect_error){
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Handle login submission
 $login_error = "";
-
-// Handle login form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $conn->real_escape_string($_POST['email']);
     $password = $_POST['password'];
 
     // Prepare SQL to prevent SQL injection
-    $stmt = $conn->prepare("SELECT id, name, password FROM users WHERE email = ?");
+    $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -30,14 +26,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows === 1) {
         $user = $result->fetch_assoc();
         
-        // Verify password (assuming passwords are hashed)
+        // Verify password
         if (password_verify($password, $user['password'])) {
             // Login successful
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['name'];
+            $_SESSION['username'] = $user['username'];
             
-            // Redirect to login confirmation page
-            header("Location: login.php");
+            // Redirect to dashboard or homepage
+            header("Location: Homepage.php");
             exit();
         } else {
             // Invalid password
@@ -57,28 +53,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Metro District Designs</title>
+    <title>Metro District Designs - Login</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             background-color: #E5E4E2;
             font-family: Arial, sans-serif;
+        }   
+
+        .navbar {
+            background-color: #1E1E1E;
+            padding: 10px 0;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            color: white !important;
+            font-weight: bold;
+        }
+
+        .navbar-brand img {
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .navbar-nav {
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .navbar-nav .nav-link {
+            color: white !important;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin: 0 10px;
         }
 
         .login-container {
             background-color: #9b9b9b;
-            max-width: 400px;
-            margin: 100px auto;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 800px;
+            padding: 80px;
+            text-align: center;
+            margin: 80px auto;
         }
-
+        .login-container h2 {
+            color: black;
+            margin-bottom: 20px;
+        }
         .login-form input {
-            margin-bottom: 15px;
+            width: 100%;
+            margin-bottom: 25px;
+            padding: 8px;
+            border: none;
+            box-sizing: border-box;
         }
-
+        .login-form button {
+            width: 100%;
+            padding: 10px;
+            background-color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 15px;
+        }
         .error-message {
             color: red;
             margin-bottom: 15px;
@@ -86,26 +124,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="login-container">
-            <h2 class="text-center mb-4">Login</h2>
-            
-            <?php
-            if (!empty($login_error)) {
-                echo "<div class='error-message text-center'>$login_error</div>";
-            }
-            ?>
-            
-            <form class="login-form" method="POST" action="">
-                <input type="email" name="email" class="form-control" placeholder="Email" required>
-                <input type="password" name="password" class="form-control" placeholder="Password" required>
-                <button type="submit" class="btn btn-dark w-100">Login</button>
-                
-                <div class="text-center mt-3">
-                    Don't have an account? <a href="signup.php">Sign up</a>
-                </div>
-            </form>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="Homepage.php">
+                <img src="/api/placeholder/40/40" class="rounded-circle">
+                Metro District Designs
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="Homepage.php">HOME</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Products.php">PRODUCTS</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Commissioned.php">COMMISSIONED DESIGNS</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="Signup.php">SIGNUP</a></li>
+                </ul>
+            </div>
         </div>
+    </nav>
+
+    <div class="login-container">
+        <h2>LOGIN</h2>
+        
+        <?php
+        // Display login errors
+        if (!empty($login_error)) {
+            echo '<div class="error-message">' . htmlspecialchars($login_error) . '</div>';
+        }
+
+        // Display any registration success message
+        if (isset($_SESSION['registration_success'])) {
+            echo '<div class="alert alert-success">' . htmlspecialchars($_SESSION['registration_success']) . '</div>';
+            unset($_SESSION['registration_success']);
+        }
+        ?>
+
+        <form class="login-form" action="Login.php" method="POST">
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <div class="login-link">
+                Don't have an account? <a href="Signup.php">Sign Up</a>
+            </div>
+            <button type="submit">Login</button>
+        </form>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
