@@ -1,23 +1,25 @@
-<?php
+    <?php
+    session_start();
+    $host = "localhost";
+    $username = "root";
+    $password = "";
+    $database = "metrodistrictdesigns";
 
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "signup";
+    $conn = new mysqli($host, $username, $password, $database);
 
-$conn = new mysqli($host, $username, $password, $database);
+    if ($conn->connect_error){
+        die("Connection failed: " . $conn->connect_error);
+    }
+    ?>
 
-if ($conn->connect_error){
-    die("Connection failed: " . $conn->connect_error);
-}
-?>
+
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metro District Designs - Commissioned Designs</title>
+    <title>Metro District Designs - Sign Up</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -75,10 +77,15 @@ if ($conn->connect_error){
         }
         .signup-form button {
             width: 100%;
-            padding: 0px;
+            padding: 10px;
             background-color: white;
             border: none;
             cursor: pointer;
+            margin-top: 15px;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -108,13 +115,26 @@ if ($conn->connect_error){
 
     <div class="signup-container">
         <h2>SIGN UP</h2>
-        <form class="signup-form">
-            <input type="text" placeholder="Name">
-            <input type="email" placeholder="Email">
-            <input type="password" placeholder="Password">
+        
+        <?php
+        // Display any registration errors
+        if (isset($_SESSION['registration_errors'])) {
+            echo '<div class="error-message">';
+            foreach ($_SESSION['registration_errors'] as $error) {
+                echo '<p>' . htmlspecialchars($error) . '</p>';
+            }
+            echo '</div>';
+            unset($_SESSION['registration_errors']);
+        }
+        ?>
+
+        <form class="signup-form" action="register.php" method="POST">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
             <div class="login-link">
-                    Already have an account? <a href="Login.php">Log In</a>
-                </div>
+                Already have an account? <a href="Login.php">Log In</a>
+            </div>
             <button type="submit">Sign Up</button>
         </form>
     </div>
