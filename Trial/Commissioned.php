@@ -392,7 +392,7 @@
         
         function initializeTshirt() {
             // Using a placeholder URL - replace with your actual image path
-            const mockupImagePath = "tshirt-mockup-white.jpg";
+            const mockupImagePath = "whiteshirt.jpg";
             
             const tshirtBg = document.getElementById('tshirt-bg');
             tshirtBg.style.backgroundImage = `url('${mockupImagePath}')`;
