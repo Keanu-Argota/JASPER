@@ -155,8 +155,8 @@
         }
         
         .tshirt-container {
-            width: 80%;
-            height: 80%;
+            width: 90%;
+            height: 90%;
             position: relative;
             display: flex;
             justify-content: center;
@@ -177,8 +177,8 @@
             top: 35%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 40%;
-            height: 40%;
+            width: 30%;
+            height: 30%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -269,6 +269,16 @@
             
             .tshirt-display, .preview-section {
                 width: 100%;
+            }
+            
+            .tshirt-container {
+                width: 80%;
+                height: 80%;
+            }
+            
+            .design-area {
+                width: 25%;
+                height: 25%;
             }
         }
     </style>
@@ -381,8 +391,14 @@
         });
         
         function initializeTshirt() {
+            // Using a placeholder URL - replace with your actual image path
+            const mockupImagePath = "tshirt-mockup-white.jpg";
+            
             const tshirtBg = document.getElementById('tshirt-bg');
-            tshirtBg.style.backgroundImage = "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"350\" viewBox=\"0 0 300 350\"><path d=\"M100,10 L50,60 L20,40 L60,120 L60,340 L240,340 L240,120 L280,40 L250,60 L200,10 Z\" fill=\"white\" stroke=\"%23ddd\" stroke-width=\"2\"/></svg>')";
+            tshirtBg.style.backgroundImage = `url('${mockupImagePath}')`;
+            tshirtBg.style.backgroundSize = "contain";
+            tshirtBg.style.backgroundPosition = "center";
+            tshirtBg.style.backgroundRepeat = "no-repeat";
             
             // Set design area to default
             const designArea = document.getElementById('design-display');
@@ -423,10 +439,28 @@
                 }
             });
             
-            // Change the t-shirt color by updating the SVG fill color
-            const encodedColor = encodeURIComponent(color);
+            // Map color selection to corresponding shirt image
+            let shirtImagePath;
+            switch(color) {
+                case 'white':
+                    shirtImagePath = 'tshirt-mockup-white.jpg';
+                    break;
+                case 'black':
+                    shirtImagePath = 'tshirt-mockup-black.jpg';
+                    break;
+                case '#ff6b6b':
+                    shirtImagePath = 'tshirt-mockup-red.jpg';
+                    break;
+                case '#4ecdc4':
+                    shirtImagePath = 'tshirt-mockup-blue.jpg';
+                    break;
+                default:
+                    shirtImagePath = 'tshirt-mockup-white.jpg';
+            }
+            
+            // Update the t-shirt background
             const tshirtBg = document.getElementById('tshirt-bg');
-            tshirtBg.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"350\" viewBox=\"0 0 300 350\"><path d=\"M100,10 L50,60 L20,40 L60,120 L60,340 L240,340 L240,120 L280,40 L250,60 L200,10 Z\" fill=\"${encodedColor}\" stroke=\"%23ddd\" stroke-width=\"2\"/></svg>')`;
+            tshirtBg.style.backgroundImage = `url('${shirtImagePath}')`;
             
             // Adjust text color for better visibility
             const designArea = document.getElementById('design-display');
@@ -459,11 +493,11 @@
                 reader.onload = function(e) {
                     // Update the design on the t-shirt
                     const designArea = document.getElementById('design-display');
-                    designArea.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 100%;">`;
+                    designArea.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
                     
                     // Update the design-only preview
                     const designOnlyPreview = document.getElementById('design-only-preview');
-                    designOnlyPreview.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 100%;">`;
+                    designOnlyPreview.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
                 }
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
